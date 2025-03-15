@@ -3,8 +3,10 @@
 namespace App\Service;
 
 use App\Dto\CalculatePriceRequest;
+use App\Enum\CountryTaxRate;
 use App\Repository\ProductRepository;
 use App\Repository\CouponRepository;
+use InvalidArgumentException;
 
 class PriceCalculator
 {
@@ -43,16 +45,14 @@ class PriceCalculator
         return round($price, 2);
     }
 
-    private function getTaxRate(
-        string $taxNumber,
-    ): float {
+    private function getTaxRate(string $taxNumber): float
+    {
         $countryCode = substr($taxNumber, 0, 2);
-        switch ($countryCode) {
-            case 'DE': return 19;
-            case 'IT': return 22;
-            case 'FR': return 20;
-            case 'GR': return 24;
-            default: throw new \InvalidArgumentException('Invalid tax number');
+
+        try {
+            return CountryTaxRate::from($countryCode)->rate();
+        } catch (\ValueError $e) {
+            throw new InvalidArgumentException('Invalid tax number');
         }
     }
 }
